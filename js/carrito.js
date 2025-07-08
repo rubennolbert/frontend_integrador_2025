@@ -1,52 +1,45 @@
-document.addEventListener("DOMContentLoaded", () => {
-  let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-  const lista = document.getElementById("listaCarrito");
-  const total = document.getElementById("totalCarrito");
+import { enviarVenta } from './api.js';
 
-  function renderCarrito() {
-    lista.innerHTML = "";
-    let suma = 0;
-    carrito.forEach(item => {
-      const div = document.createElement("div");
-      div.innerHTML = `
-        <h4>${item.nombre}</h4>
-        <p>$${item.precio} x ${item.cantidad}</p>
-        <button data-id="${item.id}" class="sumar">+</button>
-        <button data-id="${item.id}" class="restar">-</button>
-        <button data-id="${item.id}" class="eliminar">Eliminar</button>
-      `;
-      lista.appendChild(div);
-      suma += item.precio * item.cantidad;
-    });
+let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+const cliente = localStorage.getItem('cliente') || "Invitado";
 
-    total.textContent = `Total: $${suma}`;
-  }
-
-  lista.addEventListener("click", e => {
-    const id = parseInt(e.target.dataset.id);
-    if(e.target.classList.contains("sumar")) {
-      carrito.find(p => p.id === id).cantidad++;
-    } else if(e.target.classList.contains("restar")) {
-      const prod = carrito.find(p => p.id === id);
-      if(prod.cantidad > 1) prod.cantidad--;
-    } else if(e.target.classList.contains("eliminar")) {
-      carrito = carrito.filter(p => p.id !== id);
-    }
-
-    localStorage.setItem("carrito", JSON.stringify(carrito));
-    renderCarrito();
-
+function renderCarrito() {
+  const contenedor = document.getElementById('listaCarrito');
+  contenedor.innerHTML = "";
+  carrito.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <h4>${item.nombre}</h4>
+      <p>Precio: $${item.precio}</p>
+      <p>Cantidad: ${item.cantidad}</p>
+      <button>Eliminar</button>
+    `;
+    div.querySelector('button').addEventListener('click', () => eliminarProducto(idx));
+    contenedor.appendChild(div);
   });
+  calcularTotal();
+}
 
-  document.getElementById("confirmarCompra").addEventListener("click", async () => {
-    await enviarVenta({
-      cliente: localStorage.getItem("nombreCliente"),
-      carrito
-    });
-    localStorage.removeItem("carrito");
-    window.location.href = "bienvenida.html";
-  });
-
+function eliminarProducto(idx) {
+  carrito.splice(idx, 1);
+  localStorage.setItem('carrito', JSON.stringify(carrito));
   renderCarrito();
-  
+}
+
+function calcularTotal() {
+  const total = carrito.reduce((sum, p) => sum + p.precio * p.cantidad, 0);
+  document.getElementById('totalCarrito').innerText = `Total: $${total}`;
+}
+
+document.getElementById('confirmarCompra').addEventListener('click', async () => {
+  if (carrito.length === 0) {
+    alert("El carrito está vacío");
+    return;
+  }
+  await enviarVenta({ cliente, carrito });
+  alert("Compra realizada con éxito");
+  localStorage.removeItem('carrito');
+  window.location.href = "bienvenida.html";
 });
+
+document.addEventListener('DOMContentLoaded', renderCarrito);

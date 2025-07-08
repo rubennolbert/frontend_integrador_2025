@@ -1,14 +1,14 @@
-const API_URL = "http://localhost:3000/api/products";
+const API_URL = "http://localhost:3000";
 
-async function obtenerProductos() {
-  const res = await fetch(API_URL);
-  return await res.json();
+export async function obtenerProductos() {
+  const response = await fetch(`${API_URL}/api/products`);
+  return await response.json();
 }
 
-async function enviarVenta(venta) {
-  await fetch("http://localhost:3000/api/sales", {
+export async function enviarVenta(venta) {
+  await fetch(`${API_URL}/api/sales`, {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(venta)
   });
 }
